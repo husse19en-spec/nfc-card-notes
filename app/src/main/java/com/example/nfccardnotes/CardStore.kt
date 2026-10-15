@@ -16,7 +16,9 @@ data class CardNote(
     val last4: String,
     var nickname: String,
     var notes: String,
-    var expiry: String
+    var expiry: String,
+    var photo1: String = "",
+    var photo2: String = ""
 )
 
 /** Simple local storage backed by SharedPreferences (stays only on this phone). */
@@ -36,7 +38,9 @@ class CardStore(context: Context) {
                     o.optString("last4"),
                     o.optString("nickname"),
                     o.optString("notes"),
-                    o.optString("expiry")
+                    o.optString("expiry"),
+                    o.optString("photo1"),
+                    o.optString("photo2")
                 )
             )
         }
@@ -65,6 +69,8 @@ class CardStore(context: Context) {
             o.put("nickname", c.nickname)
             o.put("notes", c.notes)
             o.put("expiry", c.expiry)
+            o.put("photo1", c.photo1)
+            o.put("photo2", c.photo2)
             arr.put(o)
         }
         prefs.edit().putString("list", arr.toString()).apply()

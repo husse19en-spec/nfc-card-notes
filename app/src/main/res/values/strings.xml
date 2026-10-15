@@ -25,4 +25,11 @@
     <string name="auth_title">المصادقة مطلوبة</string>
     <string name="auth_subtitle">استخدم البصمة أو الوجه أو رمز القفل</string>
     <string name="no_lock_set">لا يوجد قفل على هذا الجهاز. فعّل البصمة أو رمز القفل من إعدادات الهاتف لحماية بياناتك.</string>
+
+    <!-- التفاصيل والصور -->
+    <string name="photos">صور البطاقة</string>
+    <string name="add_photo">+ إضافة صورة</string>
+    <string name="change_photo">تغيير الصورة</string>
+    <string name="remove_photo">حذف الصورة</string>
+    <string name="details">تفاصيل البطاقة</string>
 </resources>

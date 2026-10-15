@@ -1,17 +1,14 @@
 package com.example.nfccardnotes
 
 import android.content.Context
+import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import android.os.Build
 import android.os.Bundle
-import android.view.Gravity
 import android.view.View
-import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
@@ -32,6 +29,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
 
     private var locked = true          // التطبيق يبدأ مقفلاً
     private var authInProgress = false
+    private var internalNav = false    // عند فتح شاشة التفاصيل لا نُعيد القفل
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +37,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         setContentView(binding.root)
 
         store = CardStore(this)
-        adapter = CardAdapter(onClick = { if (!locked) showEditDialog(it, isNew = false) })
+        adapter = CardAdapter(onClick = { if (!locked) openDetail(it, isNew = false) })
         binding.recycler.layoutManager = LinearLayoutManager(this)
         binding.recycler.adapter = adapter
 
@@ -56,14 +54,25 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (locked) {
             showLocked()
             promptUnlock()
+        } else {
+            internalNav = false
+            refresh()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!locked) enableNfc()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        nfcAdapter?.disableReaderMode(this)
     }
 
     override fun onStop() {
         super.onStop()
-        // أعد القفل عند مغادرة التطبيق
-        locked = true
-        nfcAdapter?.disableReaderMode(this)
+        if (!internalNav) locked = true   // أُعيد القفل فقط عند مغادرة التطبيق فعلاً
     }
 
     private fun showLocked() {
@@ -83,7 +92,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (authInProgress) return
 
         if (!deviceCanAuthenticate()) {
-            // لا يوجد قفل مُفعّل على الجهاز — ننبّه المستخدم لكن نسمح بالدخول
             Toast.makeText(this, R.string.no_lock_set, Toast.LENGTH_LONG).show()
             onUnlocked()
             return
@@ -99,7 +107,6 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
                 }
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     authInProgress = false
-                    // يبقى مقفلاً؛ يمكنه الضغط على "فتح القفل" للمحاولة ثانية
                 }
             })
 
@@ -108,7 +115,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             .setSubtitle(getString(R.string.auth_subtitle))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-               builder.setAllowedAuthenticators(allowedAuthenticators())
+            builder.setAllowedAuthenticators(allowedAuthenticators())
         } else {
             @Suppress("DEPRECATION")
             builder.setDeviceCredentialAllowed(true)
@@ -116,23 +123,19 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         prompt.authenticate(builder.build())
     }
 
-    /** يسمح بالبصمة/الوجه مع الرجوع لرمز قفل الجهاز. */
     private fun allowedAuthenticators(): Int =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
             BIOMETRIC_STRONG or DEVICE_CREDENTIAL
         else
             BIOMETRIC_WEAK or DEVICE_CREDENTIAL
 
-    /** هل يملك الجهاز وسيلة مصادقة (بصمة/وجه أو رمز قفل)؟ */
     private fun deviceCanAuthenticate(): Boolean {
         val bm = BiometricManager.from(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             return bm.canAuthenticate(BIOMETRIC_STRONG or DEVICE_CREDENTIAL) ==
                 BiometricManager.BIOMETRIC_SUCCESS
         }
-        // بصمة متوفرة؟
         if (bm.canAuthenticate(BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS) return true
-        // أو رمز/نمط قفل الجهاز موجود؟
         val km = getSystemService(Context.KEYGUARD_SERVICE) as? android.app.KeyguardManager
         return km?.isDeviceSecure == true
     }
@@ -170,69 +173,30 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         }
     }
 
-    // ----- البيانات والواجهة -----
+    private fun onCardRead(info: EmvReader.CardInfo) {
+        val key = sha256(info.pan)
+        val last4 = info.pan.filter { it.isDigit() }.takeLast(4)
+        val existing = store.get(key)
+        if (existing != null) openDetail(existing, isNew = false)
+        else openDetail(CardNote(key, last4, "", "", info.expiry), isNew = true)
+    }
+
+    // ----- التنقل والقائمة -----
+
+    private fun openDetail(card: CardNote, isNew: Boolean) {
+        internalNav = true
+        val i = Intent(this, CardDetailActivity::class.java)
+        i.putExtra("key", card.key)
+        i.putExtra("last4", card.last4)
+        i.putExtra("expiry", card.expiry)
+        i.putExtra("isNew", isNew)
+        startActivity(i)
+    }
 
     private fun refresh() {
         val all = store.getAll()
         adapter.submit(all)
         binding.empty.visibility = if (all.isEmpty()) View.VISIBLE else View.GONE
-    }
-
-    private fun onCardRead(info: EmvReader.CardInfo) {
-        val key = sha256(info.pan)
-        val last4 = info.pan.filter { it.isDigit() }.takeLast(4)
-        val existing = store.get(key)
-        if (existing != null) showEditDialog(existing, isNew = false)
-        else showEditDialog(CardNote(key, last4, "", "", info.expiry), isNew = true)
-    }
-
-    private fun showEditDialog(card: CardNote, isNew: Boolean) {
-        val pad = (16 * resources.displayMetrics.density).toInt()
-        val container = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(pad, pad / 2, pad, 0)
-        }
-        val nick = EditText(this).apply {
-            hint = getString(R.string.hint_nickname)
-            setText(card.nickname)
-        }
-        val notes = EditText(this).apply {
-            hint = getString(R.string.hint_notes)
-            setText(card.notes)
-            minLines = 3
-            gravity = Gravity.TOP
-        }
-        container.addView(nick)
-        container.addView(notes)
-
-        val title = buildString {
-            append(getString(R.string.card))
-            if (card.last4.isNotEmpty()) append(" •••• ${card.last4}")
-            if (card.expiry.isNotEmpty()) append("  (${card.expiry})")
-        }
-
-        val builder = AlertDialog.Builder(this)
-            .setTitle(title)
-            .setView(container)
-            .setPositiveButton(R.string.save) { _, _ ->
-                card.nickname = nick.text.toString().trim()
-                card.notes = notes.text.toString().trim()
-                store.save(card)
-                refresh()
-                toast(getString(R.string.saved))
-            }
-            .setNegativeButton(R.string.cancel, null)
-
-        if (!isNew) builder.setNeutralButton(R.string.delete) { _, _ -> confirmDelete(card) }
-        builder.show()
-    }
-
-    private fun confirmDelete(card: CardNote) {
-        AlertDialog.Builder(this)
-            .setMessage(R.string.confirm_delete)
-            .setPositiveButton(R.string.delete) { _, _ -> store.delete(card.key); refresh() }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
     }
 
     private fun sha256(s: String): String {
