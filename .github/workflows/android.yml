@@ -3,7 +3,7 @@ name: Build APK
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch:   # يسمح بتشغيل البناء يدوياً من تبويب Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,13 +18,10 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install SDK packages
+      - name: Install required SDK packages
         run: |
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager "platforms;android-34" "build-tools;34.0.0" "platform-tools" >/dev/null
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-34" "build-tools;34.0.0" "platform-tools" >/dev/null 2>&1 || true
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
