@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
             .setSubtitle(getString(R.string.auth_subtitle))
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            builder.setAllowedAuthenticators(authenticators)
+               builder.setAllowedAuthenticators(allowedAuthenticators())
         } else {
             @Suppress("DEPRECATION")
             builder.setDeviceCredentialAllowed(true)
