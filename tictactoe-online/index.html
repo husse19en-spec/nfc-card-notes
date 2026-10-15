@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>إكس أو أونلاين</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>❌⭕ إكس أو أونلاين</h1>
+    <div id="userBox" class="user-box hidden">
+      <img id="userPhoto" alt="" referrerpolicy="no-referrer">
+      <span id="userName"></span>
+      <button id="signOutBtn" class="btn ghost small">خروج</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- تنبيه الإعداد -->
+    <section id="setupScreen" class="card hidden">
+      <h2>الإعداد مطلوب</h2>
+      <p>ضع بيانات مشروع Firebase الخاص بك في الملف <code>firebase-config.js</code>، ثم أعد تحميل الصفحة.
+        راجع ملف <code>README.md</code> للخطوات.</p>
+    </section>
+
+    <!-- تسجيل الدخول -->
+    <section id="loginScreen" class="card center hidden">
+      <h2>أهلاً بك 👋</h2>
+      <p>سجّل الدخول بحساب Gmail لتلعب مع أصدقائك أونلاين، مع دردشة نصية وصوتية.</p>
+      <button id="signInBtn" class="btn google">
+        <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34.1 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+        تسجيل الدخول بحساب Google
+      </button>
+    </section>
+
+    <!-- الردهة -->
+    <section id="lobbyScreen" class="hidden">
+      <div class="card">
+        <h2>غرفة جديدة</h2>
+        <p>أنشئ غرفة وأرسل الرمز أو الرابط لصديقك.</p>
+        <button id="createRoomBtn" class="btn primary">إنشاء غرفة</button>
+      </div>
+      <div class="card">
+        <h2>الانضمام برمز</h2>
+        <form id="joinForm" class="row">
+          <input id="joinCode" maxlength="6" placeholder="مثال: K7Q2XP" autocomplete="off" dir="ltr">
+          <button class="btn primary" type="submit">انضمام</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2>غرف تنتظر لاعباً</h2>
+        <ul id="openRooms" class="room-list"><li class="muted">لا توجد غرف حالياً</li></ul>
+      </div>
+    </section>
+
+    <!-- الغرفة / اللعبة -->
+    <section id="roomScreen" class="hidden">
+      <div class="room-layout">
+        <div class="card game-card">
+          <div class="room-head">
+            <div>
+              رمز الغرفة: <strong id="roomCode" dir="ltr"></strong>
+              <button id="copyLinkBtn" class="btn ghost small">نسخ الرابط</button>
+            </div>
+            <button id="leaveRoomBtn" class="btn danger small">مغادرة</button>
+          </div>
+
+          <div class="players">
+            <div class="player" id="playerX">
+              <span class="mark x">X</span>
+              <img alt="" referrerpolicy="no-referrer"><span class="pname">—</span>
+              <span class="score" id="scoreX">0</span>
+            </div>
+            <div class="vs">تعادل: <span id="scoreDraw">0</span></div>
+            <div class="player" id="playerO">
+              <span class="mark o">O</span>
+              <img alt="" referrerpolicy="no-referrer"><span class="pname">بانتظار لاعب…</span>
+              <span class="score" id="scoreO">0</span>
+            </div>
+          </div>
+
+          <p id="status" class="status"></p>
+          <div id="board" class="board"></div>
+          <button id="rematchBtn" class="btn primary hidden">جولة جديدة</button>
+        </div>
+
+        <div class="card side-card">
+          <div class="voice">
+            <h3>🎙️ المكالمة الصوتية</h3>
+            <p id="voiceStatus" class="muted">غير متصل</p>
+            <div class="row wrap">
+              <button id="callBtn" class="btn primary small">بدء مكالمة</button>
+              <button id="answerBtn" class="btn primary small hidden">رد على المكالمة</button>
+              <button id="muteBtn" class="btn ghost small hidden">كتم الصوت</button>
+              <button id="hangupBtn" class="btn danger small hidden">إنهاء</button>
+            </div>
+            <audio id="remoteAudio" autoplay playsinline></audio>
+          </div>
+
+          <div class="chat">
+            <h3>💬 الدردشة</h3>
+            <ul id="messages" class="messages"></ul>
+            <form id="chatForm" class="row">
+              <input id="chatInput" maxlength="500" placeholder="اكتب رسالة…" autocomplete="off">
+              <button class="btn primary" type="submit">إرسال</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

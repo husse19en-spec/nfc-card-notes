@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(roomId) {
+      return signedIn() &&
+        request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.playerUids;
+    }
+
+    match /rooms/{roomId} {
+      // أي مستخدم مسجّل يستطيع رؤية الغرف (لعرض الغرف المتاحة والانضمام)
+      allow read: if signedIn();
+
+      // المنشئ يصبح اللاعب X
+      allow create: if signedIn()
+        && request.resource.data.playerUids == [request.auth.uid]
+        && request.resource.data.players.X.uid == request.auth.uid
+        && request.resource.data.status == 'waiting';
+
+      allow update: if signedIn() && (
+        // لاعب داخل الغرفة يحدّث حالة اللعبة
+        (request.auth.uid in resource.data.playerUids
+          && request.resource.data.playerUids == resource.data.playerUids)
+        ||
+        // لاعب ثانٍ ينضم إلى غرفة تنتظر
+        (resource.data.status == 'waiting'
+          && resource.data.playerUids.size() == 1
+          && request.resource.data.playerUids == resource.data.playerUids.concat([request.auth.uid])
+          && request.resource.data.players.O.uid == request.auth.uid
+          && request.resource.data.players.X == resource.data.players.X)
+      );
+
+      // فقط المنشئ يحذف الغرفة
+      allow delete: if signedIn() && resource.data.players.X.uid == request.auth.uid;
+
+      match /messages/{msgId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId)
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 500;
+      }
+
+      // إشارات المكالمة الصوتية — للاعبي الغرفة فقط
+      match /voice/{docId} {
+        allow read, write: if isMember(roomId);
+      }
+      match /voiceCandidates/{candId} {
+        allow read, write: if isMember(roomId);
+      }
+    }
+  }
+}
