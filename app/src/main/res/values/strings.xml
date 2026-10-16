@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">بطاقاتي</string>
+    <string name="status_tap">بياناتك محفوظة ومحمية على جهازك</string>
+    <string name="tap_hint">قرّب بطاقتك من ظهر الهاتف لعرض بياناتها أو إضافتها</string>
+    <string name="my_cards">بطاقاتي المحفوظة</string>
+    <string name="no_nfc">هذا الجهاز لا يدعم تقنية NFC</string>
+    <string name="not_card">هذه ليست بطاقة مصرفية</string>
+    <string name="read_failed">تعذّرت قراءة البطاقة، حاول مرة أخرى</string>
+    <string name="card">بطاقة</string>
+    <string name="hint_nickname">اسم البطاقة (مثال: بطاقة الراتب)</string>
+    <string name="hint_notes">البيانات / الملاحظات</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="delete">حذف</string>
+    <string name="saved">تم الحفظ</string>
+    <string name="confirm_delete">حذف بيانات هذه البطاقة؟</string>
+    <string name="unnamed">بطاقة بدون اسم</string>
+    <string name="empty">لا توجد بطاقات محفوظة بعد</string>
+
+    <!-- القفل -->
+    <string name="locked_title">التطبيق مقفل</string>
+    <string name="locked_sub">تحقّق من هويتك للمتابعة</string>
+    <string name="unlock">فتح القفل</string>
+    <string name="auth_title">المصادقة مطلوبة</string>
+    <string name="auth_subtitle">استخدم البصمة أو الوجه أو رمز القفل</string>
+    <string name="no_lock_set">لا يوجد قفل على هذا الجهاز. فعّل البصمة أو رمز القفل من إعدادات الهاتف لحماية بياناتك.</string>
+</resources>

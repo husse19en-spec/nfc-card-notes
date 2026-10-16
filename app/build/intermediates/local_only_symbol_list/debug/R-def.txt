@@ -1,0 +1,26 @@
+R_DEF: Internal format may change without notice
+local
+id empty
+id notes
+id recycler
+id status
+id subtitle
+id title
+layout activity_main
+layout item_card
+string app_name
+string cancel
+string card
+string confirm_delete
+string delete
+string empty
+string hint_nickname
+string hint_notes
+string no_nfc
+string not_card
+string read_failed
+string save
+string saved
+string status_tap
+string unnamed
+style Theme.NfcCardNotes

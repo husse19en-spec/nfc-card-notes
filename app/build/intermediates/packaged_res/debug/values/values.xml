@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">بطاقاتي</string>
+    <string name="cancel">إلغاء</string>
+    <string name="card">بطاقة</string>
+    <string name="confirm_delete">حذف بيانات هذه البطاقة؟</string>
+    <string name="delete">حذف</string>
+    <string name="empty">لا توجد بطاقات محفوظة بعد</string>
+    <string name="hint_nickname">اسم البطاقة (مثال: بطاقة الراتب)</string>
+    <string name="hint_notes">البيانات / الملاحظات</string>
+    <string name="no_nfc">هذا الجهاز لا يدعم تقنية NFC</string>
+    <string name="not_card">هذه ليست بطاقة مصرفية</string>
+    <string name="read_failed">تعذّرت قراءة البطاقة، حاول مرة أخرى</string>
+    <string name="save">حفظ</string>
+    <string name="saved">تم الحفظ</string>
+    <string name="status_tap">قرّب بطاقتك من ظهر الهاتف لعرض بياناتها أو إضافتها</string>
+    <string name="unnamed">بطاقة بدون اسم</string>
+    <style name="Theme.NfcCardNotes" parent="Theme.MaterialComponents.DayNight.DarkActionBar"/>
+</resources>
