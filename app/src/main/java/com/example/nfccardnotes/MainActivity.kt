@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
     private var locked = true          // التطبيق يبدأ مقفلاً
     private var authInProgress = false
     private var internalNav = false    // عند فتح شاشة التفاصيل لا نُعيد القفل
+    private var pendingTag: Tag? = null // بطاقة لُمست أثناء القفل، تُعالَج بعد فتح القفل
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +46,29 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         if (nfcAdapter == null) binding.status.text = getString(R.string.no_nfc)
 
         binding.unlockBtn.setOnClickListener { promptUnlock() }
+
+        handleNfcIntent(intent)   // في حال فُتح التطبيق بتقريب بطاقة
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNfcIntent(intent)
+    }
+
+    /** يلتقط البطاقة التي أطلقت التطبيق عند التقريب. */
+    private fun handleNfcIntent(intent: Intent?) {
+        val action = intent?.action ?: return
+        if (action != NfcAdapter.ACTION_TECH_DISCOVERED &&
+            action != NfcAdapter.ACTION_TAG_DISCOVERED) return
+        @Suppress("DEPRECATION")
+        val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG) ?: return
+        if (locked) pendingTag = tag   // تُعالَج بعد التحقق من الهوية
+        else processTag(tag)
+    }
+
+    private fun processTag(tag: Tag) {
+        Thread { onTagDiscovered(tag) }.start()
     }
 
     // ----- دورة الحياة والقفل -----
@@ -86,6 +110,10 @@ class MainActivity : AppCompatActivity(), NfcAdapter.ReaderCallback {
         binding.content.visibility = View.VISIBLE
         refresh()
         enableNfc()
+        pendingTag?.let { t ->       // بطاقة لُمست قبل فتح القفل
+            pendingTag = null
+            processTag(t)
+        }
     }
 
     private fun promptUnlock() {
